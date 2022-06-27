@@ -119,9 +119,9 @@ class BleManager {
     });
   }
 
-  connect(peripheralId) {
+  connect(peripheralId,reconnect) {
     return new Promise((fulfill, reject) => {
-      bleManager.connect(peripheralId, error => {
+      bleManager.connect(peripheralId, reconnect, error => {
         if (error) {
           reject(error);
         } else {
@@ -380,6 +380,25 @@ class BleManager {
       } else {
         return false;
       }
+    });
+  }
+
+  isPeripheralConnectible(peripheralId) {
+    return new Promise((fulfill, reject) => {
+      if(React.Platform.OS == 'android') 
+        bleManager.isPeripheralConnectible(peripheralId, (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            if (result != null) {
+              fulfill(result);
+            } else {
+              fulfill(false);
+            }
+          }
+        });
+      else
+        fulfill(true);
     });
   }
 

@@ -1,4 +1,4 @@
-declare module "react-native-ble-manager" {
+declare module "@gethai/react-native-ble-manager" {
   export interface Peripheral {
     id: string;
     rssi: number;
@@ -37,7 +37,7 @@ declare module "react-native-ble-manager" {
     options?: ScanOptions
   ): Promise<void>;
   export function stopScan(): Promise<void>;
-  export function connect(peripheralID: string): Promise<void>;
+  export function connect(peripheralID: string, reconnect:boolean): Promise<void>;
   export function disconnect(
     peripheralID: string,
     force?: boolean
@@ -94,7 +94,9 @@ declare module "react-native-ble-manager" {
     peripheralID: string,
     serviceUUIDs: string[]
   ): Promise<boolean>;
-
+  export function isPeripheralConnectible(
+    peripheralID: string
+  ): Promise<boolean>;
   // [Android only API 21+]
   export enum ConnectionPriority {
     balanced = 0,

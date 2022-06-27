@@ -1,15 +1,12 @@
 {
-  "name": "react-native-ble-manager",
+  "name": "@gethai/react-native-ble-manager",
   "version": "7.5.0",
   "description": "A BLE module for react native.",
   "main": "BleManager",
   "types": "./index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/innoveit/react-native-ble-manager.git"
-  },
-  "bugs": {
-    "url": "https://github.com/innoveit/react-native-ble-manager/issues"
+  "repository":"https://github.com/gethai/shared",
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com"
   },
   "keywords": [
     "react-native",

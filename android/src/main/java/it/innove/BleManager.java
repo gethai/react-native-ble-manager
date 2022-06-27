@@ -253,7 +253,20 @@ class BleManager extends ReactContextBaseJavaModule implements ActivityEventList
 	}
 
 	@ReactMethod
-	public void connect(String peripheralUUID, Callback callback) {
+	public void isPeripheralConnectible(String peripheralUUID, Callback callback) {
+		Log.d(LOG_TAG, "isPeripheralConnectible: " + peripheralUUID);
+
+		Peripheral peripheral = retrieveOrCreatePeripheral(peripheralUUID);
+		if (peripheral == null) {
+			callback.invoke("Invalid peripheral uuid");
+			return;
+		}
+		// Check if the peripheral is cached or not
+		callback.invoke(null,peripheral.getDevice().getType() != BluetoothDevice.DEVICE_TYPE_UNKNOWN);
+	}
+
+	@ReactMethod
+	public void connect(String peripheralUUID, boolean reconnect, Callback callback) {
 		Log.d(LOG_TAG, "Connect to: " + peripheralUUID);
 
 		Peripheral peripheral = retrieveOrCreatePeripheral(peripheralUUID);
@@ -261,7 +274,7 @@ class BleManager extends ReactContextBaseJavaModule implements ActivityEventList
 			callback.invoke("Invalid peripheral uuid");
 			return;
 		}
-		peripheral.connect(callback, getCurrentActivity());
+		peripheral.connect(reconnect, callback, getCurrentActivity());
 	}
 
 	@ReactMethod

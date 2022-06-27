@@ -4,6 +4,7 @@ package it.innove;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanFilter.Builder;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
@@ -57,9 +58,15 @@ public class LollipopScanManager extends ScanManager {
         
         if (serviceUUIDs.size() > 0) {
             for(int i = 0; i < serviceUUIDs.size(); i++){
-				ScanFilter filter = new ScanFilter.Builder().setServiceUuid(new ParcelUuid(UUIDHelper.uuidFromString(serviceUUIDs.getString(i)))).build();
+                Builder builder = new ScanFilter.Builder();
+                String id = serviceUUIDs.getString(i);
+                if(BluetoothAdapter.checkBluetoothAddress(id))
+                    builder.setDeviceAddress(id);
+                else
+                    builder.setServiceUuid(new ParcelUuid(UUIDHelper.uuidFromString(id)));
+				ScanFilter filter = builder.build();
                 filters.add(filter);
-                Log.d(bleManager.LOG_TAG, "Filter service: " + serviceUUIDs.getString(i));
+                Log.d(bleManager.LOG_TAG, "Filter: " + serviceUUIDs.getString(i));
             }
         }
         

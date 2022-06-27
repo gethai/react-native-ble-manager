@@ -91,13 +91,13 @@ public class Peripheral extends BluetoothGattCallback {
 		Log.d(BleManager.LOG_TAG, "Peripheral event (" + eventName + "):" + device.getAddress());
 	}
 
-	public void connect(Callback callback, Activity activity) {
+	public void connect(boolean reconnect, Callback callback, Activity activity) {
 		if (!connected) {
 			BluetoothDevice device = getDevice();
 			this.connectCallback = callback;
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 				Log.d(BleManager.LOG_TAG, " Is Or Greater than M $mBluetoothDevice");
-				gatt = device.connectGatt(activity, false, this, BluetoothDevice.TRANSPORT_LE);
+				gatt = device.connectGatt(activity, reconnect, this, BluetoothDevice.TRANSPORT_LE);//GURU
 			} else {
 				Log.d(BleManager.LOG_TAG, " Less than M");
 				try {
@@ -106,11 +106,11 @@ public class Peripheral extends BluetoothGattCallback {
 							BluetoothGattCallback.class, Integer.class);
 					m.setAccessible(true);
 					Integer transport = device.getClass().getDeclaredField("TRANSPORT_LE").getInt(null);
-					gatt = (BluetoothGatt) m.invoke(device, activity, false, this, transport);
+					gatt = (BluetoothGatt) m.invoke(device, activity, reconnect, this, transport);//GURU
 				} catch (Exception e) {
 					e.printStackTrace();
 					Log.d(TAG, " Catch to call normal connection");
-					gatt = device.connectGatt(activity, false, this);
+					gatt = device.connectGatt(activity, reconnect, this);
 				}
 			}
 		} else {
