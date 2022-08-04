@@ -299,7 +299,7 @@ RCT_EXPORT_METHOD(start:(NSDictionary *)options callback:(nonnull RCTResponseSen
     
     dispatch_queue_t queue;
     if ([[options allKeys] containsObject:@"queueIdentifierKey"]) {
-	dispatch_queue_attr_t queueAttributes = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_BACKGROUND, 0);
+    dispatch_queue_attr_t queueAttributes = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_BACKGROUND, 0);
         queue = dispatch_queue_create([[options valueForKey:@"queueIdentifierKey"] UTF8String], queueAttributes);
     } else {
         queue = dispatch_get_main_queue();
@@ -570,7 +570,7 @@ RCT_EXPORT_METHOD(writeWithoutResponse:(NSString *)deviceUUID serviceUUID:(NSStr
                 
                 offset += thisChunkSize;
                 [peripheral writeValue:chunk forCharacteristic:characteristic type:CBCharacteristicWriteWithoutResponse];
-		NSTimeInterval sleepTimeSeconds = (NSTimeInterval) queueSleepTime / 1000;
+        NSTimeInterval sleepTimeSeconds = (NSTimeInterval) queueSleepTime / 1000;
                 [NSThread sleepForTimeInterval: sleepTimeSeconds];
             } while (offset < length);
             
@@ -629,14 +629,17 @@ RCT_EXPORT_METHOD(retrieveServices:(NSString *)deviceUUID services:(NSArray<NSSt
     CBPeripheral *peripheral = [self findPeripheralByUUID:deviceUUID];
     
     if (peripheral && peripheral.state == CBPeripheralStateConnected) {
-        [retrieveServicesCallbacks setObject:callback forKey:[peripheral uuidAsString]];
-        
         NSMutableArray<CBUUID *> *uuids = [NSMutableArray new];
         for ( NSString *string in services ) {
             CBUUID *uuid = [CBUUID UUIDWithString:string];
             [uuids addObject:uuid];
         }
         
+        if(uuids.count > 1)
+            [retrieveServicesCallbacks setObject:callback forKey:[peripheral uuidAsString]];
+        else
+            [retrieveServicesCallbacks setObject:callback forKey:[self keyForService:peripheral service:uuids[0]]];
+
         if ( uuids.count > 0 ) {
             [peripheral discoverServices:uuids];
         } else {
@@ -809,12 +812,16 @@ RCT_EXPORT_METHOD(requestMTU:(NSString *)deviceUUID mtu:(NSInteger)mtu callback:
         [readRSSICallbacks removeObjectForKey:peripheralUUIDString];
     }
     
-    RCTResponseSenderBlock retrieveServicesCallback = [retrieveServicesCallbacks valueForKey:peripheralUUIDString];
-    if (retrieveServicesCallback) {
-        retrieveServicesCallback(@[errorStr]);
-        [retrieveServicesCallbacks removeObjectForKey:peripheralUUIDString];
+    for(NSString* key in retrieveServicesCallbacks.allKeys){
+        if([key containsString:peripheralUUIDString]){
+            RCTResponseSenderBlock retrieveServicesCallback = [retrieveServicesCallbacks valueForKey:key];
+            if (retrieveServicesCallback) {
+                retrieveServicesCallback(@[errorStr]);
+                [retrieveServicesCallbacks removeObjectForKey:key];
+            }
+        }
     }
-    
+        
     NSArray* ourReadCallbacks = readCallbacks.allKeys;
     for (id key in ourReadCallbacks) {
         if ([key hasPrefix:peripheralUUIDString]) {
@@ -895,6 +902,13 @@ RCT_EXPORT_METHOD(requestMTU:(NSString *)deviceUUID mtu:(NSInteger)mtu callback:
     NSString *peripheralUUIDString = [peripheral uuidAsString];
     NSMutableSet *latch = [retrieveServicesLatches valueForKey:peripheralUUIDString];
     [latch removeObject:service];
+
+    NSString *serviceKey = [self keyForService:peripheral service:service.UUID];
+    RCTResponseSenderBlock retrieveThisServiceCallback = [retrieveServicesCallbacks valueForKey:serviceKey];
+    if (retrieveThisServiceCallback) {
+        retrieveThisServiceCallback(@[[NSNull null], [peripheral asDictionary]]);
+        [retrieveServicesCallbacks removeObjectForKey:serviceKey];
+    }
     
     if ([latch count] == 0) {
         // Call success callback for connect
@@ -1008,6 +1022,10 @@ RCT_EXPORT_METHOD(requestMTU:(NSString *)deviceUUID mtu:(NSInteger)mtu callback:
 
 -(NSString *) keyForPeripheral: (CBPeripheral *)peripheral andCharacteristic:(CBCharacteristic *)characteristic {
     return [NSString stringWithFormat:@"%@|%@", [peripheral uuidAsString], [characteristic UUID]];
+}
+
+-(NSString *) keyForService: (CBPeripheral *)peripheral service:(CBUUID *)service {
+    return [NSString stringWithFormat:@"%@|%@", [peripheral uuidAsString], service];
 }
 
 -(void)centralManager:(CBCentralManager *)central willRestoreState:(NSDictionary<NSString *,id> *)dict
