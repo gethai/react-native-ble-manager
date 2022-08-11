@@ -84,7 +84,7 @@ declare module "@gethai/react-native-ble-manager" {
     queueSleepTime?: number
   ): Promise<void>;
 
-  export function readRSSI(peripheralID: string): Promise<void>;
+  export function readRSSI(peripheralID: string): Promise<number>;
 
   export function getConnectedPeripherals(
     serviceUUIDs: string[]
